@@ -261,12 +261,12 @@ export default function Login() {
                                             transition: 'all 0.2s'
                                         }}
                                         onFocus={(e) => {
-                                            e.target.style.borderColor = 'var(--color-primary)';
-                                            e.target.style.background = 'rgba(255,255,255,0.8)';
+                                            e.target.style.borderColor = 'var(--border-focus)';
+                                            e.target.style.background = 'var(--bg-surface)';
                                         }}
                                         onBlur={(e) => {
-                                            e.target.style.borderColor = 'rgba(255,255,255,0.5)';
-                                            e.target.style.background = 'rgba(255,255,255,0.35)';
+                                            e.target.style.borderColor = 'var(--border-light)';
+                                            e.target.style.background = 'var(--bg-glass)';
                                         }}
                                     />
                                 </div>
@@ -308,12 +308,12 @@ export default function Login() {
                                             transition: 'all 0.2s'
                                         }}
                                         onFocus={(e) => {
-                                            e.target.style.borderColor = 'var(--color-primary)';
-                                            e.target.style.background = 'rgba(255,255,255,0.8)';
+                                            e.target.style.borderColor = 'var(--border-focus)';
+                                            e.target.style.background = 'var(--bg-surface)';
                                         }}
                                         onBlur={(e) => {
-                                            e.target.style.borderColor = 'rgba(255,255,255,0.5)';
-                                            e.target.style.background = 'rgba(255,255,255,0.35)';
+                                            e.target.style.borderColor = 'var(--border-light)';
+                                            e.target.style.background = 'var(--bg-glass)';
                                         }}
                                     />
                                     <button
@@ -382,7 +382,7 @@ export default function Login() {
                                             }}
                                             onMouseOut={(e) => {
                                                 if (selectedRole !== role.value) {
-                                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)';
+                                                    e.currentTarget.style.borderColor = 'var(--border-light)';
                                                 }
                                             }}
                                         >

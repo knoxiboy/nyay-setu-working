@@ -3,7 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { UserPlus, FileText, Zap, ArrowRight, Users, Star, CheckCircle, Smartphone } from 'lucide-react';
+import { UserPlus, FileText, Zap, ArrowRight, Users, Star, CheckCircle, Smartphone, Bot, BookOpen, Video, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Header from '../components/landing/Header';
 import Footer from '../components/landing/Footer';
@@ -348,13 +348,15 @@ export default function Landing() {
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
                             {[
-                                { icon: '🤖', title: 'AI Legal Assistant', desc: '24/7 AI-powered chatbot for instant legal guidance', color: '#3F5DCC' },
-                                { icon: '📖', title: 'Constitution Reader', desc: 'Browse Indian Constitution with intelligent search and Q&A', color: '#7C5CFF' },
-                                { icon: '📄', title: 'File Cases Online', desc: 'Submit legal cases digitally with secure document management', color: '#10B981' },
-                                { icon: '📹', title: 'Virtual Hearings', desc: 'Attend court proceedings remotely with video conferencing', color: '#F59E0B' },
-                                { icon: '🔒', title: 'Secure & Private', desc: 'Bank-grade encryption ensures your data stays protected', color: '#EF4444' },
-                                { icon: '⚡', title: 'Real-time Updates', desc: 'Get instant notifications on case progress and hearings', color: '#8B5CF6' },
-                            ].map((f, i) => (
+                                { icon: Bot, title: 'AI Legal Assistant', desc: '24/7 AI-powered chatbot for instant legal guidance', color: '#3F5DCC' },
+                                { icon: BookOpen, title: 'Constitution Reader', desc: 'Browse Indian Constitution with intelligent search and Q&A', color: '#7C5CFF' },
+                                { icon: FileText, title: 'File Cases Online', desc: 'Submit legal cases digitally with secure document management', color: '#10B981' },
+                                { icon: Video, title: 'Virtual Hearings', desc: 'Attend court proceedings remotely with video conferencing', color: '#F59E0B' },
+                                { icon: ShieldCheck, title: 'Secure & Private', desc: 'Bank-grade encryption ensures your data stays protected', color: '#EF4444' },
+                                { icon: Zap, title: 'Real-time Updates', desc: 'Get instant notifications on case progress and hearings', color: '#8B5CF6' },
+                            ].map((f, i) => {
+                                const FeatureIcon = f.icon;
+                                return (
                                 <motion.div key={i}
                                     initial={{ opacity: 0, y: 20 }}
                                     whileInView={{ opacity: 1, y: 0 }}
@@ -372,11 +374,18 @@ export default function Landing() {
                                     onMouseEnter={e => { e.currentTarget.style.borderColor = f.color + '50'; e.currentTarget.style.boxShadow = `0 8px 24px ${f.color}15`; }}
                                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-light)'; e.currentTarget.style.boxShadow = 'none'; }}
                                 >
-                                    <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>{f.icon}</div>
+                                    <div style={{
+                                        width: '48px', height: '48px', borderRadius: '14px',
+                                        background: f.color + '12',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        marginBottom: '1rem',
+                                    }}>
+                                        <FeatureIcon size={24} style={{ color: f.color }} />
+                                    </div>
                                     <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '0.6rem' }}>{f.title}</h3>
                                     <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.65', margin: 0 }}>{f.desc}</p>
                                 </motion.div>
-                            ))}
+                            );})}
                         </div>
                     </div>
                 </section>
