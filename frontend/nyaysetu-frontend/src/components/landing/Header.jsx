@@ -250,28 +250,31 @@ export default function Header({ hideAuthButtons = false }) {
 
                         {/* Language Toggle */}
                         <button
-                            onClick={() => i18n.changeLanguage(i18n.language === 'en' ? 'hi' : 'en')}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.35rem',
-                                padding: '0.5rem 0.8rem',
-                                background: 'transparent',
-                                border: '1px solid var(--border-medium)',
-                                borderRadius: '8px',
-                                color: 'var(--text-main)',
-                                cursor: 'pointer',
-                                fontWeight: '600',
-                                fontSize: '0.8rem',
-                                fontFamily: 'inherit',
-                                transition: 'all 0.2s ease',
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--border-medium)'; }}
-                        >
-                            <Globe size={14} />
-                            {i18n.language === 'en' ? 'हिंदी' : 'EN'}
-                        </button>
+                        onClick={() => {
+                            const next = i18n.language === 'en' ? 'hi' : i18n.language === 'hi' ? 'mr' : 'en';
+                            i18n.changeLanguage(next);
+                        }}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            padding: '0.5rem 0.8rem',
+                            background: 'transparent',
+                            border: '1px solid var(--border-medium)',
+                            borderRadius: '8px',
+                            color: 'var(--text-main)',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            fontSize: '0.8rem',
+                            fontFamily: 'inherit',
+                            transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--border-medium)'; }}
+                    >
+                        <Globe size={14} />
+                        {i18n.language === 'en' ? 'हिंदी' : i18n.language === 'hi' ? 'मराठी' : 'EN'}
+                    </button>
 
                         {/* Dark Mode Toggle */}
                         <motion.button
@@ -456,23 +459,26 @@ export default function Header({ hideAuthButtons = false }) {
                                         {isDark ? <><Sun size={16} /> Light Mode</> : <><Moon size={16} /> Dark Mode</>}
                                     </button>
                                     <button
-                                        onClick={() => i18n.changeLanguage(i18n.language === 'en' ? 'hi' : 'en')}
-                                        style={{
-                                            display: 'flex', alignItems: 'center', gap: '0.35rem',
-                                            padding: '0.6rem 1rem',
-                                            background: 'transparent',
-                                            border: '1px solid var(--border-medium)',
-                                            borderRadius: '8px',
-                                            color: 'var(--text-main)',
-                                            cursor: 'pointer',
-                                            fontSize: '0.875rem',
-                                            fontWeight: '600',
-                                            fontFamily: 'inherit',
-                                        }}
-                                    >
-                                        <Globe size={14} />
-                                        {i18n.language === 'en' ? 'हिंदी' : 'EN'}
-                                    </button>
+                                    onClick={() => {
+                                        const next = i18n.language === 'en' ? 'hi' : i18n.language === 'hi' ? 'mr' : 'en';
+                                        i18n.changeLanguage(next);
+                                    }}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '0.35rem',
+                                        padding: '0.6rem 1rem',
+                                        background: 'transparent',
+                                        border: '1px solid var(--border-medium)',
+                                        borderRadius: '8px',
+                                        color: 'var(--text-main)',
+                                        cursor: 'pointer',
+                                        fontSize: '0.875rem',
+                                        fontWeight: '600',
+                                        fontFamily: 'inherit',
+                                    }}
+                                >
+                                <Globe size={14} />
+                                {i18n.language === 'en' ? 'हिंदी' : i18n.language === 'hi' ? 'मराठी' : 'EN'}
+                                </button>
                                 </div>
                                 {!hideAuthButtons && (
                                     <>
