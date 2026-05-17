@@ -14,3 +14,15 @@ node_modules
 npm-debug.log
 build/
 dist/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+.git
+.idea
+.vscode
+.env
+Dockerfile
+.dockerignore

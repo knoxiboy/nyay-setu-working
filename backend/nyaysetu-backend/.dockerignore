@@ -4,3 +4,14 @@ target
 .env
 .env.*
 .DS_Store
+target/
+*.jar
+.mvn/
+mvnw
+mvnw.cmd
+.git
+.idea
+.vscode
+.env
+Dockerfile
+.dockerignore
