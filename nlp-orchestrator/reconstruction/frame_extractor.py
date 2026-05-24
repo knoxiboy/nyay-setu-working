@@ -1,46 +1,41 @@
 import cv2
 import os
 
-print("Program started")
+video_path = r"input_videos\Sample2.mp4"
+output_folder = r"reconstruction\output_frames\cam2"
 
-def extract_frames(video_path, output_folder):
+os.makedirs(output_folder, exist_ok=True)
 
-    os.makedirs(output_folder, exist_ok=True)
+cap = cv2.VideoCapture(video_path)
 
-    video = cv2.VideoCapture(video_path)
+if not cap.isOpened():
+    print("Error opening video")
+    exit()
 
-    if not video.isOpened():
-        print("Error opening video")
-        return
+fps = cap.get(cv2.CAP_PROP_FPS)
 
-    fps = video.get(cv2.CAP_PROP_FPS)
+frame_number = 0
 
-    print(f"Video FPS: {fps}")
+while True:
 
-    count = 0
+    success, frame = cap.read()
 
-    while True:
+    if not success:
+        break
 
-        success, frame = video.read()
+    timestamp = frame_number / fps
 
-        if not success:
-            break
+    frame_filename = os.path.join(
+        output_folder,
+        f"frame_{frame_number:04d}.jpg"
+    )
 
-        frame_path = os.path.join(
-            output_folder,
-            f"frame_{count}.jpg"
-        )
+    cv2.imwrite(frame_filename, frame)
 
-        cv2.imwrite(frame_path, frame)
+    print(f"Saved frame at {timestamp:.2f} sec")
 
-        count += 1
+    frame_number += 1
 
-    video.release()
+cap.release()
 
-    print(f"Extracted {count} frames successfully")
-
-
-extract_frames(
-    "sample.mp4",
-    "output_frames"
-)
+print("Frame extraction completed")

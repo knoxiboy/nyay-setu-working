@@ -2,7 +2,7 @@ import cv2
 import json
 import os
 
-video_path = r"input_videos\sample.mp4"
+video_path = r"input_videos\Sample.mp4"
 
 print("Trying to open:", video_path)
 
@@ -23,7 +23,7 @@ height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 duration = frame_count / fps
 
 metadata = {
-    "video_name": "sample.mp4",
+    "video_name": "Sample.mp4",
     "fps": fps,
     "total_frames": frame_count,
     "resolution": [width, height],
