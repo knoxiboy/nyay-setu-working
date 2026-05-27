@@ -207,7 +207,7 @@ export default function Landing() {
                                     }}
                                 >
                                     <Download size={18} />
-                                    Install App
+                                    {t('hero.installApp')}
                                 </motion.button>
                             </div>
 
