@@ -7,6 +7,7 @@ import { ThemeProvider } from './contexts/ThemeContext.jsx';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingSpinner from './components/LoadingSpinner';
 import ScrollToTop from './ScrollToTop';
+import './styles/accessibility.css';
 import ScrollProgressBar from './components/ScrollProgressBar';
 
 // PWA Components
