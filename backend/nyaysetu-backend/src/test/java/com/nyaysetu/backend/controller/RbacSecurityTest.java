@@ -26,16 +26,13 @@ public class RbacSecurityTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @TestConfiguration
+    @RestController
     static class DummyTestController {
-        @RestController
-        static class InnerDummyController {
-            @GetMapping("/api/v1/client/fir/test")
-            public String litigantEndpoint() { return "Litigant OK"; }
+        @GetMapping("/api/v1/client/fir/test")
+        public String litigantEndpoint() { return "Litigant OK"; }
 
-            @GetMapping("/api/v1/lawyer/test")
-            public String lawyerEndpoint() { return "Lawyer OK"; }
-        }
+        @GetMapping("/api/v1/lawyer/test")
+        public String lawyerEndpoint() { return "Lawyer OK"; }
     }
 
     @ParameterizedTest
