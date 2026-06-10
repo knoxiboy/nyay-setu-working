@@ -15,7 +15,7 @@ pytest==9.0.3
 pytest-asyncio>0.23.5
 pytest-mock==3.15.1
 python-dotenv==1.2.2
-python-multipart==0.0.28
+python-multipart==0.0.32
 sentencepiece
 sqlalchemy==2.0.26
 sse-starlette==2.0.0
