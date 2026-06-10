@@ -181,10 +181,10 @@ public class CaseManagementService {
             // BUT, to satisfy "dedicated storage", we really should create a document record.
             // Let's inject DocumentRepository and create a record pointing to a placeholder.
             
-        } catch (Exception e) {
-           // log error but don't fail transaction
-           System.err.println("Failed to auto-generate draft document: " + e.getMessage());
-        }
+          } catch (Exception e) {
+              // log error but don't fail transaction
+              log.error("Failed to auto-generate draft document", e);
+          }
 
         // Notify Client
         if (caseEntity.getClient() != null) {
