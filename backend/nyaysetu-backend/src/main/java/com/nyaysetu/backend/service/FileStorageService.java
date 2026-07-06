@@ -19,10 +19,13 @@ public class FileStorageService {
 
     private final Path fileStorageLocation;
     private static final String ALGORITHM = "AES";
-    private static final byte[] KEY = "NyaySetuSecureMediaKey2026AES256".getBytes();
+    private final byte[] key;
 
-    public FileStorageService(@Value("${file.upload-dir:backend/uploads/documents}") String uploadDir) {
+    public FileStorageService(
+            @Value("${file.upload-dir:backend/uploads/documents}") String uploadDir,
+            @Value("${media.encryption.key:NyaySetuSecureMediaKey2026AES256}") String encKey) {
         this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+        this.key = encKey.getBytes();
         try {
             Files.createDirectories(this.fileStorageLocation);
         } catch (Exception ex) {
@@ -32,7 +35,7 @@ public class FileStorageService {
 
     private byte[] encrypt(byte[] data) {
         try {
-            SecretKeySpec secretKey = new SecretKeySpec(KEY, ALGORITHM);
+            SecretKeySpec secretKey = new SecretKeySpec(this.key, ALGORITHM);
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
             return cipher.doFinal(data);
@@ -43,7 +46,7 @@ public class FileStorageService {
 
     private byte[] decrypt(byte[] data) {
         try {
-            SecretKeySpec secretKey = new SecretKeySpec(KEY, ALGORITHM);
+            SecretKeySpec secretKey = new SecretKeySpec(this.key, ALGORITHM);
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
             return cipher.doFinal(data);
