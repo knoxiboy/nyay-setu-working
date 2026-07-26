@@ -60,7 +60,9 @@ public class VakilFriendService {
     private final OllamaService ollamaService;
     private final BhashiniService bhashiniService;
     private final VakilFriendDocumentService vakilFriendDocumentService;
- 
+    private final PiiSanitizer piiSanitizer;
+    private final VakilFriendGroqValidatorService vakilFriendGroqValidatorService; // NEW
+
     // Optional — only present when rag.enabled=true. Null-safe usage below.
     @Autowired(required = false)
     private RagService ragService;
@@ -407,6 +409,27 @@ public class VakilFriendService {
         // Removed artificial 10,000 character truncation.
         // The database TEXT column can safely handle large transcripts without data loss.
         String chatTranscript = session.getConversationData();
+
+        // --- NEW: schema-validate / self-repair before anything touches CaseEntity/FirRecord ---
+        String transcriptExcerpt = chatTranscript.length() > 3000
+                ? chatTranscript.substring(chatTranscript.length() - 3000)
+                : chatTranscript;
+
+        VakilFriendGroqValidatorService.ValidatedCaseData validated =
+                vakilFriendGroqValidatorService.validateAndRepair(caseData, transcriptExcerpt);
+
+        if (validated.isRequiresManualInput()) {
+            log.warn("⚠️ Case data for session {} could not be validated after repair attempts. Errors: {}",
+                    sessionId, validated.getValidationErrors());
+            Map<String, Object> manualCorrection = new HashMap<>();
+            manualCorrection.put("requiresManualInput", true);
+            manualCorrection.put("validationErrors", validated.getValidationErrors());
+            manualCorrection.put("partialData", validated.getData());
+            return manualCorrection; // session stays ACTIVE — nothing is persisted
+        }
+
+        caseData = validated.getData();
+        // --- end NEW ---
  
         Object resultEntity;
         String target = caseData.getOrDefault("target", "COURT");
@@ -474,27 +497,56 @@ public class VakilFriendService {
             }
         }
  
-        // Mark session as completed
+        transferDocumentsBeforeCompletion(sessionId, resultEntity);
+
+        // Mark session as completed only after document transfer succeeds.
         session.setStatus(ChatSessionStatus.COMPLETED);
         session.setUpdatedAt(LocalDateTime.now());
         chatSessionRepository.save(session);
-        // Link any uploaded documents to the new case/FIR
-        if (resultEntity instanceof CaseEntity) {
-             vakilFriendDocumentService.transferDocumentsToCase(sessionId, ((CaseEntity)resultEntity).getId());
-        } else if (resultEntity instanceof FirRecord) {
-             // For FIRs, we might need a different logic or linked entity, currently linking to "caseId" which is UUID. 
-             // But FirRecord uses String ID usually? No, let's see. 
-             // FirRecord usually has a String firNumber. 
-             // DocumentEntity expects UUID caseId. 
-             // If FIR doesn't have UUID, we can't link easily unless we change DocumentEntity or FirRecord.
-             // Checking FirRecord: it likely has a UUID ID too?
-             // Assuming we skip FIR document linking for now or it's handled differently.
-             // Actually, let's check FirRecord definition if I can view it. I haven't viewed it.
-             // But for safer side, I'll only link for CaseEntity which has UUID.
+
+        if (resultEntity instanceof FirRecord) {
+            log.debug("Skipping case-document transfer for FIR filing result");
         }
- 
+
         return resultEntity;
     }
+
+    /**
+     * Transfers uploaded Vakil-Friend documents before completing the session.
+     * If transfer fails, the transaction is rolled back and the session remains active.
+     */
+    private void transferDocumentsBeforeCompletion(
+            UUID sessionId,
+            Object resultEntity
+    ) {
+        if (!(resultEntity instanceof CaseEntity)) {
+            log.debug(
+                    "Skipping document transfer for non-case filing result: {}",
+                    resultEntity.getClass().getSimpleName()
+            );
+            return;
+        }
+
+        CaseEntity caseEntity = (CaseEntity) resultEntity;
+
+        try {
+            vakilFriendDocumentService.transferDocumentsToCase(
+                    sessionId,
+                    caseEntity.getId()
+            );
+        } catch (Exception e) {
+            log.error(
+                    "Failed to transfer Vakil-Friend documents before completing session: {}",
+                    sessionId,
+                    e
+            );
+            throw new RuntimeException(
+                    "Failed to transfer uploaded documents. Session was not completed.",
+                    e
+            );
+        }
+    }
+
     
     /**
      * Auto-schedule the first hearing for a case
@@ -567,8 +619,19 @@ public class VakilFriendService {
         systemMsg.put("role", "system");
         
         String finalSystemPrompt = SYSTEM_PROMPT;
-        if (ragContext != null && !ragContext.isEmpty() && !ragContext.equals("No specific legal context found.")) {
-            finalSystemPrompt += "\n\n### CRITICAL INDIAN LEGAL CONTEXT RELEVANT TO THIS USER ###\n" + ragContext + "\n\nUse this law to guide the user accurately.";
+        boolean hasRagContext = ragContext != null && !ragContext.isEmpty()
+                && !ragContext.equals("No specific legal context found.");
+        List<String> contentToSanitize = new ArrayList<>();
+        if (hasRagContext) {
+            contentToSanitize.add(ragContext);
+        }
+        conversation.forEach(message -> contentToSanitize.add(message.get("content")));
+        List<String> sanitizedContent = piiSanitizer.sanitizeBatchForGroq(contentToSanitize);
+        int contentIndex = 0;
+        if (hasRagContext) {
+            finalSystemPrompt += "\n\n### CRITICAL INDIAN LEGAL CONTEXT RELEVANT TO THIS USER ###\n"
+                    + sanitizedContent.get(contentIndex++)
+                    + "\n\nUse this law to guide the user accurately.";
         }
         
         systemMsg.put("content", finalSystemPrompt);
@@ -578,7 +641,7 @@ public class VakilFriendService {
         for (Map<String, String> msg : conversation) {
             ObjectNode msgNode = objectMapper.createObjectNode();
             msgNode.put("role", msg.get("role").equals("assistant") ? "assistant" : "user");
-            msgNode.put("content", msg.get("content"));
+            msgNode.put("content", sanitizedContent.get(contentIndex++));
             messagesArray.add(msgNode);
         }
         
@@ -778,6 +841,7 @@ public class VakilFriendService {
             caseData.putIfAbsent("respondent", "Respondent");
             caseData.putIfAbsent("caseType", "CIVIL");
             caseData.putIfAbsent("urgency", "NORMAL");
+            caseData.putIfAbsent("target", "COURT"); // NEW — required by schema
  
             // Safety truncation
             caseData.entrySet().forEach(entry -> {
@@ -900,9 +964,6 @@ public class VakilFriendService {
         }
     }
  
-    /**
-     * Generate a professional case title using AI
-     */
     /**
      * Generate a professional case title using AI with strict JSON enforcement
      */

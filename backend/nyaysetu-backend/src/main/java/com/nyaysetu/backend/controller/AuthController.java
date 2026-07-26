@@ -1,5 +1,6 @@
 package com.nyaysetu.backend.controller;
 
+import com.nyaysetu.backend.exception.UserAlreadyExistsException;
 import com.nyaysetu.backend.dto.*;
 import com.nyaysetu.backend.entity.AuthProvider;
 import com.nyaysetu.backend.entity.PasswordResetToken;
@@ -56,10 +57,9 @@ public class AuthController {
                     req.getEmail(),
                     req.getName(),
                     req.getPassword(),
-                    Role.LITIGANT // public registration always creates LITIGANT — role is not caller-controlled
+                    Role.LITIGANT
             );
 
-            // Auto-login after registration
             UserDetails userDetails = userDetailsService.loadUserByUsername(req.getEmail());
             String token = jwtService.generateToken(new HashMap<>(), userDetails);
             var user = authService.findByEmail(req.getEmail());
@@ -73,10 +73,11 @@ public class AuthController {
                             "role", user.getRole().name()
                     )
             ));
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Email already exists. Please use a different email or login."));
-        } catch (Exception e) {
+        }   
+        catch (UserAlreadyExistsException e) {
+            throw e;
+        }
+        catch (Exception e) {
             log.error("Registration error", e);
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "Registration failed: " + e.getMessage()));
@@ -147,7 +148,6 @@ public class AuthController {
                 return ResponseEntity.status(401).body(Map.of("message", "Refresh token expired or invalid. Please login again."));
             }
 
-            // Issue a new short-lived access token
             String newAccessToken = jwtService.generateToken(new HashMap<>(), userDetails);
 
             return ResponseEntity.ok(Map.of(
@@ -170,6 +170,8 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest req) {
         try {
+            // Note: Ensure EmailService generates the raw token and returns it or handles the persistence flow
+            // where this controller calls PasswordResetToken.hashToken(rawToken) before saving.
             emailService.sendPasswordResetEmail(req.getEmail());
         } catch (Exception e) {
         log.warn("Password reset request completed with generic response", e);
@@ -183,7 +185,8 @@ public class AuthController {
     @GetMapping("/verify-reset-token")
     public ResponseEntity<?> verifyResetToken(@RequestParam String token) {
         try {
-            PasswordResetToken resetToken = tokenRepository.findByToken(token)
+            String hashedToken = PasswordResetToken.hashToken(token);
+            PasswordResetToken resetToken = tokenRepository.findByToken(hashedToken)
                     .orElseThrow(() -> new RuntimeException("Invalid token"));
 
             if (resetToken.isUsed()) {
@@ -203,7 +206,15 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
         try {
-            PasswordResetToken resetToken = tokenRepository.findByToken(req.getToken())
+            // Enforce password policy
+            Pattern pwPattern = Pattern.compile("^(?=.*[A-Z])(?=.*[0-9])(?=.*[@#$!%*?&]).{8,}$");
+            if (!pwPattern.matcher(req.getNewPassword()).matches()) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Password must be at least 8 characters and include an uppercase letter, a number, and a special character (@#$!%*?&)."));
+            }
+
+            String hashedToken = PasswordResetToken.hashToken(req.getToken());
+            PasswordResetToken resetToken = tokenRepository.findByToken(hashedToken)
                     .orElseThrow(() -> new RuntimeException("Invalid token"));
 
             if (resetToken.isUsed()) {
@@ -214,12 +225,10 @@ public class AuthController {
                 return ResponseEntity.status(400).body(Map.of("message", "Token expired"));
             }
 
-            // Update password
             User user = resetToken.getUser();
             user.setPassword(passwordEncoder.encode(req.getNewPassword()));
             authService.updateUser(user);
 
-            // Mark token as used
             resetToken.setUsed(true);
             tokenRepository.save(resetToken);
 
@@ -250,7 +259,6 @@ public class AuthController {
         try {
             User user = faceRecognitionService.verifyFace(req.getEmail(), req.getFaceDescriptor());
 
-            // Generate JWT token
             UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
             String token = jwtService.generateToken(new HashMap<>(), userDetails);
 

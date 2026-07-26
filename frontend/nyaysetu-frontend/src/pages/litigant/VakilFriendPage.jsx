@@ -4,7 +4,7 @@ import { useResilientStream } from '../../hooks/useResilientStream';
 import StreamFallbackBanner from '../../components/stream/StreamFallbackBanner';
 import { downloadPartialStreamContent } from '../../utils/streamResilience';
 import { Send, Bot, User, CheckCircle, ArrowLeft, Loader2, History, Plus, MessageSquare, Paperclip, Scan, FileText, X, Mic, StopCircle, Volume2, Shield, AlertTriangle, CheckCircle2, Eye, UserCircle2 } from 'lucide-react';
-import { vakilFriendAPI } from '../../services/api';
+import { vakilFriendAPI, documentAPI } from '../../services/api';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -12,6 +12,7 @@ import { API_BASE_URL } from '../../config/apiConfig';
 import AvatarPanel from '../../components/avatar/AvatarPanel';
 import { useTranslation } from 'react-i18next';
 import useChatStore from '../../store/chatStore';
+import CaseSummaryViewer from '../../components/Summary/CaseSummaryViewer';
 
 export default function VakilFriendChat() {
     const { t } = useTranslation('litigant');
@@ -860,16 +861,9 @@ const startDeepResearch = async (query) => {
 
             } else {
                 // Fallback to simple upload if no session
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('category', 'EVIDENCE');
-                formData.append('description', `Uploaded during case filing via Nyay Saarthi chat`);
-
-                const token = localStorage.getItem('token');
-                const response = await axios.post(`${API_BASE_URL}/api/documents/upload`, formData, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                const response = await documentAPI.upload(file, {
+                    category: 'EVIDENCE',
+                    description: 'Uploaded during case filing via Nyay Saarthi chat'
                 });
 
                 setAttachedFiles(prev => prev.map(f =>
@@ -1284,9 +1278,12 @@ const startDeepResearch = async (query) => {
                         }}>
                             <div style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: '700', marginBottom: '0.75rem' }}>{t('vakilFriend.aiSummary')}</div>
                             <p style={{ color: '#334155', fontSize: '1rem', lineHeight: '1.6', margin: 0 }}>
-                                {documentAnalysis.summary || t('vakilFriend.summaryPending')}
-                            </p>
                         </div>
+
+                        {/* Case Summary Viewer */}
+                        {documentAnalysis.case_summary && (
+                            <CaseSummaryViewer caseSummary={documentAnalysis.case_summary} />
+                        )}
 
                         {/* Key Points Section */}
                         {documentAnalysis.keyPoints && documentAnalysis.keyPoints.length > 0 && (

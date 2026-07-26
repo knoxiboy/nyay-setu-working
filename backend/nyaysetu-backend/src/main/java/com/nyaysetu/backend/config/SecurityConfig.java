@@ -33,7 +33,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
@@ -96,10 +95,11 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         // SAFE DEFAULT (Localhost fallback)
         List<String> defaultOrigins = Arrays.asList(
-                "http://localhost:5173",
-                "http://localhost:3000",
-                "http://localhost"
-        );
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost",
+        "https://nyaysetu-lovat.vercel.app"
+);
 
         if (allowedOrigins != null && !allowedOrigins.trim().isEmpty()) {
             List<String> origins = Arrays.stream(allowedOrigins.split(","))
